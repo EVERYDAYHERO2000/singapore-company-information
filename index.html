@@ -1,0 +1,265 @@
+<style>
+
+    body {
+        font-family: sans-serif;
+        font-size: 14px;
+        margin:0;
+        padding:0;
+    }
+
+    .form {
+        padding: 30px;
+        display: flex;
+    }
+
+    #search {
+        border-radius: 5px;
+        border: 1px solid rgba(0,0,0,0.3);
+        width: 300px;
+        padding: 8px 12px;
+    }
+
+    #searchbtn {
+        margin : 0 0 0 10px;
+        padding: 8px 12px;
+        box-sizing: border-box;
+        border-radius: 5px;
+        color: #fff;
+        background: blue;
+        cursor:pointer;
+    }
+
+    .flex {
+        display: flex;
+    }
+
+    #list {
+        padding: 0 0 30px 0;
+        width: 310px;
+        max-width: 310px;
+        min-width: 310px;
+    }
+
+    #list h2 {
+        padding-left: 8px;
+    }
+
+    #list .item {
+        padding: 8px 22px;
+        cursor:pointer;
+        box-sizing: border-box;
+        font-size: 12px;
+    }
+
+    #list .item div {
+        padding: 8px;
+    }
+
+    #list .item div:hover {
+
+        background-color: rgba(0, 138, 255, 0.09);
+        border-radius: 5px;
+
+    }
+
+    .string {
+        display: flex;
+        padding: 8px 30px;
+    }
+
+    .string div:first-child {
+        margin: 0 10px 0 0;
+    }
+
+    .string div:last-child {
+        font-weight: 700;
+    }
+
+    .search-results__spinner {
+        text-align: center;
+        padding: 2rem 0;
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .search-results__spinner div {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -15px;
+        margin-left: -15px;
+        border: 3px solid blue;;
+        border-radius: 50%;
+    }
+
+    .search-results__spinner {
+        text-align: center;
+        padding: 2rem 0;
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .search-results__spinner div:after, .search-results__spinner div:before {
+        content: "";
+        position: absolute;
+        display: block;
+        width: 3px;
+        background-color: blue;;
+        border-radius: 1.5px;
+        transform-origin: 50% 0;
+    }
+
+    .search-results__spinner div:before {
+        height: 9px;
+        left: 13.5px;
+        top: 50%;
+        -webkit-animation: spin 1500ms linear infinite;
+        animation: spin 1500ms linear infinite;
+    }
+
+    .spinner__outer {
+        width: 100%;
+        padding: 50px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #result {
+        width: calc(100% - 300px)
+    }
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+</style>    
+
+<div class="app">
+    <div class="form"><input type="text" id="search" placeholder="Company name or UEN" /><div id="searchbtn">Search</div></div>
+    <div class="flex">
+        <div id="list">
+
+        </div>
+        <div id="result">
+
+        </div>
+    </div>
+</div>    
+
+<script src="singapore-company-info.js"></script>
+
+<script>
+
+const cs = new SingaporeCompanyInfo();    
+
+const searchInput = document.querySelector('#search');
+const searchBtn = document.querySelector('#searchbtn');
+const result = document.querySelector('#result');
+const list = document.querySelector('#list');
+
+let uenResult = [];
+
+function search(value){
+
+    list.innerHTML = `<div class="spinner__outer"><div class="search-results__spinner search-results__spinner_hidden"><div></div></div></div>`;
+
+    cs.getCompany(value, function(d){
+
+        uenResult = d;
+
+        if (d.length) {
+
+            let listResult = '<div class="item"><h2>Result</h2></div>';
+
+            for (let el in d) {
+
+                listResult += `<div class="item"><div class="item__inner" data-id="${el}" data-uen="${d[el].uen}" data-name="${d[el].entity_name}">${d[el].entity_name} (UEN: ${d[el].uen})</div></div>`
+
+            }
+
+            list.innerHTML = listResult;
+
+        } else {
+
+            list.innerHTML = '<div class="item"><h2>There is nothing to show</h2></div>'
+
+        }
+
+    })
+
+}
+
+searchBtn.addEventListener('click', function(e){
+
+    search(searchInput.value);
+
+})
+
+searchInput.addEventListener('keyup', function(e){
+    let key = e.keyCode;
+
+    if (key == 13) {
+
+        search(searchInput.value);
+
+    }
+
+});
+
+list.addEventListener('click', function(e){
+
+    let target = e.target.className;
+
+    let uen = (target == 'item__inner') ? e.target.getAttribute('data-uen') : null;
+    let name = (target == 'item__inner') ? e.target.getAttribute('data-name') : null;
+    let id = (target == 'item__inner') ? e.target.getAttribute('data-id') : null;
+
+    if (uen) {
+
+        result.innerHTML = `<div class="spinner__outer"><div class="search-results__spinner search-results__spinner_hidden"><div></div></div></div>`;
+
+        cs.getInfo(name,uen, function(d){
+
+            //console.log(d)
+
+    
+            for (let k in d) uenResult[id][k] = d[k];
+            
+
+            let description = `<div class="string"><h2>${uenResult[id].entity_name}</h2></div>`;
+
+            for (let g in uenResult[id]) {
+
+                if (g != 'osm') {
+
+                    description += `<div class="string"><div>${g}: </div><div>${uenResult[id][g]}</div></div>`;
+
+                } else {
+
+                    for (let i in uenResult[id].osm) {
+
+                        description += `<div class="string"><div>${i}: </div><div>${uenResult[id].osm[i]}</div></div>`;
+
+                    }    
+
+                }    
+
+            }
+
+            result.innerHTML = description;
+
+            
+
+
+        })
+
+    }
+
+})
+
+
+
+</script>    
