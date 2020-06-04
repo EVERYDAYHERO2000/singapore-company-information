@@ -46,8 +46,6 @@ class SingaporeCompanyInfo {
 
     }
 
-
-
     getCompany(name, callback) {
 
         const result = [];
