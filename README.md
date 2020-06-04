@@ -1,5 +1,5 @@
-# singapore-company-information
+# Singapore Company Search
 Information about Singapore companies by name or UEN.
 
-Search Example: https://everydayhero2000.github.io/singapore-company-information/
+Simple Search Example: https://everydayhero2000.github.io/singapore-company-information/
 
